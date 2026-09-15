@@ -5,6 +5,9 @@ import com.abhay.user_service.entity.User;
 import com.abhay.user_service.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Slf4j
 @Service
@@ -14,7 +17,6 @@ public class UserService {
         this.userRepository = userRepository;
     }
     public UserDto createUser(UserDto input){
-        log.info("Creating User: {}", input);
         final User createdUser=User.builder()
                 .name(input.getName())
                 .surname(input.getSurname())
@@ -27,7 +29,35 @@ public class UserService {
         return toDto(saved);
     }
 
-    private UserDto toDto(User user){
+    public UserDto getUserById(@PathVariable Long id){
+
+        return userRepository.findById(id)
+                .map(this::toDto)
+                .orElse(null);
+    }
+
+    public void updateUser(Long id, UserDto dto){
+        User user=userRepository.findById(id)
+                .orElseThrow(()-> new IllegalArgumentException("User with id: "+id+" not found"));
+        user.setName(dto.getName());
+        user.setSurname(dto.getSurname());
+        user.setEmail(dto.getEmail());
+        user.setAddress(dto.getAddress());
+        user.setAlerting(dto.isAlerting());
+        user.setEnergyAlertingThreshold(dto.getEnergyAlertingThreshold());
+
+        userRepository.save(user);
+    }
+
+    public void deleteUser(Long id){
+        User user=userRepository.findById(id)
+                .orElseThrow(()-> new IllegalArgumentException("User with id: "+id+" not found"));
+
+        userRepository.deleteById(id);
+    }
+
+
+    private UserDto toDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
                 .name(user.getName())
